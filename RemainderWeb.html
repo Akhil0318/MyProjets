@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Song Reminder</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      padding: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Song Reminder</h1>
+    <form id="reminderForm">
+      <div class="form-group">
+        <label for="reminderTime">Set Reminder Time:</label>
+        <input type="time" id="reminderTime" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="soundUrl">Sound URL:</label>
+        <input type="url" id="soundUrl" class="form-control" value="https://drive.google.com/uc?export=download&id=1MiltU0ZzQSxxstQI_zlN48JU2aM9vU9F" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Set Reminder</button>
+    </form>
+    <div id="reminderConfirmation" style="display: none;">
+      <p><i class="fas fa-check-circle text-success"></i> Reminder set for <span id="reminderTimeDisplay"></span></p>
+    </div>
+    <div id="countdown" style="display: none;">
+      <p>Next reminder in <span id="countdownDisplay"></span></p>
+    </div>
+    <!-- Audio player -->
+    <audio id="audioPlayer" controls style="display: none;">
+      <source id="audioSource" src="" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+  </div>
+
+  <!-- Font Awesome -->
+  <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    let countdownInterval;
+
+    document.getElementById('reminderForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const reminderTime = document.getElementById('reminderTime').value;
+      const soundUrl = document.getElementById('soundUrl').value;
+
+      // Clear previous interval
+      clearInterval(countdownInterval);
+
+      // Set the reminder
+      setTimeout(function() {
+        // Play the sound
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioSource = document.getElementById('audioSource');
+        audioSource.src = soundUrl;
+        audioPlayer.load();
+        audioPlayer.play();
+
+        // Show confirmation
+        document.getElementById('reminderConfirmation').style.display = 'block';
+        document.getElementById('reminderTimeDisplay').innerText = reminderTime;
+
+        // Start countdown for next reminder
+        startCountdown();
+      }, getTimeDifference(reminderTime));
+
+      // Function to calculate time difference between current time and reminder time
+      function getTimeDifference(reminderTime) {
+        const now = new Date();
+        const reminderParts = reminderTime.split(':');
+        const reminderDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), reminderParts[0], reminderParts[1], 0);
+        const timeDiff = reminderDate.getTime() - now.getTime();
+        return timeDiff > 0 ? timeDiff : 24 * 60 * 60 * 1000 + timeDiff; // If the reminder time is before current time, set it for the next day
+      }
+    });
+
+    function startCountdown() {
+      countdownInterval = setInterval(function() {
+        const now = new Date();
+        const nextReminderTime = new Date(now.getTime() + getTimeDifference(document.getElementById('reminderTime').value));
+        const timeDiff = nextReminderTime.getTime() - now.getTime();
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+        document.getElementById('countdownDisplay').innerText = `${hours}h ${minutes}m ${seconds}s`;
+        document.getElementById('countdown').style.display = 'block';
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
